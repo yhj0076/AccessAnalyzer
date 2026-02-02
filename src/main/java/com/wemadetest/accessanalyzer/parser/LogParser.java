@@ -38,6 +38,7 @@ public class LogParser {
                     continue;
                 }
 
+                detailLog = new DetailLog();
                 List<String> detailLogList = csvParser(log);
 
                 detailLog.setTimeGeneratedUTC(stringToLocalDateTime(detailLogList.get(0)));
