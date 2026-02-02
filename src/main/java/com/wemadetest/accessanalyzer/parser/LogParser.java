@@ -1,5 +1,7 @@
-﻿package com.wemadetest.accessanalyzer.parser;
+package com.wemadetest.accessanalyzer.parser;
 
+import com.wemadetest.accessanalyzer.dto.AnalysisDto;
+import com.wemadetest.accessanalyzer.entity.AccessLog;
 import com.wemadetest.accessanalyzer.entity.DetailLog;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,8 @@ import java.util.Locale;
 
 @Component
 public class LogParser {
+    private final int ANALYSIS_MAX_SIZE = 500;
+
     public List<DetailLog> fileToDetailLog(MultipartFile file){
         List<DetailLog> detailLogs = new ArrayList<>();
 
@@ -88,6 +92,36 @@ public class LogParser {
 
         result.add(sb.toString());
 
+        //TODO: csv 라인 에러
+
         return result;
+    }
+
+    public AnalysisDto.Response resultToResponse(AccessLog accessLog){
+        AnalysisDto.Response response = new AnalysisDto.Response();
+
+        double successRate = (double) accessLog.getSuccessCount() /accessLog.getDetailLogs().size()*100d;
+        double redirectRate = (double) accessLog.getRedirectCount() /accessLog.getDetailLogs().size()*100d;
+        double clientErrorRate = (double) accessLog.getClientErrorCount() /accessLog.getDetailLogs().size()*100d;
+        double serverErrorRate = (double) accessLog.getServerErrorCount() /accessLog.getDetailLogs().size()*100d;
+
+        response.setRequestCount(accessLog.getDetailLogs().size());
+        response.setSuccessRate(String.format("%.2f", successRate));
+        response.setRedirectRate(String.format("%.2f", redirectRate));
+        response.setClientErrorRate(String.format("%.2f", clientErrorRate));
+        response.setServerErrorRate(String.format("%.2f", serverErrorRate));
+
+        List<AnalysisDto.DetailLogResponse> detailLogResponseList = new ArrayList<>();
+        for(int i = 0; i < ANALYSIS_MAX_SIZE; i++){
+            DetailLog detailLog = accessLog.getDetailLogs().get(i);
+
+            AnalysisDto.DetailLogResponse detailLogResponse = new AnalysisDto.DetailLogResponse();
+            detailLogResponse.setPath(detailLog.getOriginalRequestUriWithArgs());
+            detailLogResponse.setClientIp(detailLog.getClientIp());
+            detailLogResponse.setHttpStatus(detailLog.getHttpStatus().value());
+            detailLogResponseList.add(detailLogResponse);
+        }
+
+        return response;
     }
 }

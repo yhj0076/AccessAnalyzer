@@ -1,4 +1,4 @@
-﻿package com.wemadetest.accessanalyzer.entity;
+package com.wemadetest.accessanalyzer.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

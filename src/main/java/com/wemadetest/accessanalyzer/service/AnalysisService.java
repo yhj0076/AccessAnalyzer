@@ -1,4 +1,4 @@
-﻿package com.wemadetest.accessanalyzer.service;
+package com.wemadetest.accessanalyzer.service;
 
 import com.wemadetest.accessanalyzer.entity.AccessLog;
 import com.wemadetest.accessanalyzer.entity.DetailLog;
@@ -48,5 +48,9 @@ public class AnalysisService {
         detailLogRepository.saveAll(detailLogList,analysisId);
 
         return analysisId;
+    }
+
+    public AccessLog getLog(long analysisId){
+        return accessLogRepository.get(analysisId);
     }
 }

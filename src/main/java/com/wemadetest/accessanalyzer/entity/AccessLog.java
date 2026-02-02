@@ -1,9 +1,10 @@
-﻿package com.wemadetest.accessanalyzer.entity;
+package com.wemadetest.accessanalyzer.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -15,5 +16,5 @@ public class AccessLog {
     private int clientErrorCount;
     private int serverErrorCount;
 
-    private List<Long> detailLogs;
+    private List<DetailLog> detailLogs = new ArrayList<>();
 }
