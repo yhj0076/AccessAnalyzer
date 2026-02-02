@@ -1,5 +1,6 @@
 package com.wemadetest.accessanalyzer.dto;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,6 +21,14 @@ public class AnalysisDto {
     @Getter
     @Setter
     @NoArgsConstructor
+    @JsonPropertyOrder({
+            "requestCount",
+            "successRate",
+            "redirectRate",
+            "clientErrorRate",
+            "serverErrorRate",
+            "detailLogs"
+    })
     public static class Response{
         private int requestCount;
         private String successRate;
