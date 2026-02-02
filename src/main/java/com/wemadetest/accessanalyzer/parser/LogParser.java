@@ -123,6 +123,8 @@ public class LogParser {
             detailLogResponseList.add(detailLogResponse);
         }
 
+        response.setDetailLogs(detailLogResponseList);
+
         return response;
     }
 }
