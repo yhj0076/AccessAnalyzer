@@ -3,6 +3,7 @@
 import com.wemadetest.accessanalyzer.entity.DetailLog;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,9 +17,11 @@ public class DetailLogRepository {
         this.accessLogRepository = accessLogRepository;
     }
 
-    public long save(DetailLog detailLog, long analysisId) {
-        detailLogDatabase.put(id++, detailLog);
+    public void saveAll(List<DetailLog> detailLog, long analysisId) {
+        for(DetailLog logs : detailLog) {
+            detailLogDatabase.put(id++, logs);
+        }
+
         accessLogRepository.get(analysisId).getDetailLogs().add(id);
-        return id;
     }
 }
