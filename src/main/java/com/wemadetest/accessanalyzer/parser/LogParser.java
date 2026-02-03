@@ -6,6 +6,7 @@ import com.wemadetest.accessanalyzer.entity.DetailLog;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,7 +19,12 @@ import java.util.Locale;
 
 @Component
 public class LogParser {
-    private final int ANALYSIS_MAX_SIZE = 500;
+    private final int ANALYSIS_MAX_SIZE = 10;
+    private final WebClient webClient;
+
+    public LogParser(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     public List<DetailLog> fileToDetailLog(MultipartFile file){
         List<DetailLog> detailLogs = new ArrayList<>();
@@ -120,11 +126,27 @@ public class LogParser {
             detailLogResponse.setPath(detailLog.getOriginalRequestUriWithArgs());
             detailLogResponse.setClientIp(detailLog.getClientIp());
             detailLogResponse.setHttpStatus(detailLog.getHttpStatus().value());
+
+            AnalysisDto.IpInfoResponse ipInfoResponse = getIpInfo(detailLog.getClientIp());
+
+            detailLogResponse.setAsn(ipInfoResponse.getAsn());
+            detailLogResponse.setAs_name(ipInfoResponse.getAs_name());
+            detailLogResponse.setAs_domain(ipInfoResponse.getAs_domain());
+            detailLogResponse.setCountry(ipInfoResponse.getCountry());
+
             detailLogResponseList.add(detailLogResponse);
         }
 
         response.setDetailLogs(detailLogResponseList);
 
         return response;
+    }
+
+    public AnalysisDto.IpInfoResponse getIpInfo(String ip){
+        return webClient.get()
+                .uri("/{ip}", ip)
+                .retrieve()
+                .bodyToMono(AnalysisDto.IpInfoResponse.class)
+                .block();
     }
 }
