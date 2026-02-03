@@ -1,3 +1,7 @@
 spring:
   application:
     name: AccessAnalyzer
+
+ip-info:
+  api: https://api.ipinfo.io/lite/
+  token: ${IPINFO_TOKEN}
