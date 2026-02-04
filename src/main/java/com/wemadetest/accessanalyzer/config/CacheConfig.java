@@ -1,4 +1,4 @@
-﻿package com.wemadetest.accessanalyzer.config;
+package com.wemadetest.accessanalyzer.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;

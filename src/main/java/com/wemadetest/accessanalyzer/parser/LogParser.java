@@ -3,6 +3,9 @@ package com.wemadetest.accessanalyzer.parser;
 import com.wemadetest.accessanalyzer.dto.AnalysisDto;
 import com.wemadetest.accessanalyzer.entity.AccessLog;
 import com.wemadetest.accessanalyzer.entity.DetailLog;
+import com.wemadetest.accessanalyzer.service.IpInfoService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,13 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+@Slf4j
 @Component
 public class LogParser {
     private final int ANALYSIS_MAX_SIZE = 10;
     private final WebClient webClient;
+    private final IpInfoService ipInfoService;
 
-    public LogParser(WebClient webClient) {
+    public LogParser(WebClient webClient, IpInfoService ipInfoService) {
         this.webClient = webClient;
+        this.ipInfoService = ipInfoService;
     }
 
     public List<DetailLog> fileToDetailLog(MultipartFile file){
@@ -127,7 +133,7 @@ public class LogParser {
             detailLogResponse.setClientIp(detailLog.getClientIp());
             detailLogResponse.setHttpStatus(detailLog.getHttpStatus().value());
 
-            AnalysisDto.IpInfoResponse ipInfoResponse = getIpInfo(detailLog.getClientIp());
+            AnalysisDto.IpInfoResponse ipInfoResponse = ipInfoService.getIpInfo(detailLog.getClientIp());
 
             detailLogResponse.setAsn(ipInfoResponse.getAsn());
             detailLogResponse.setAs_name(ipInfoResponse.getAs_name());
@@ -142,11 +148,5 @@ public class LogParser {
         return response;
     }
 
-    public AnalysisDto.IpInfoResponse getIpInfo(String ip){
-        return webClient.get()
-                .uri("/{ip}", ip)
-                .retrieve()
-                .bodyToMono(AnalysisDto.IpInfoResponse.class)
-                .block();
-    }
+
 }
