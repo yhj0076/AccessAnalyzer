@@ -1,6 +1,10 @@
 spring:
   application:
     name: AccessAnalyzer
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
 
 ip-info:
   api: https://api.ipinfo.io/lite/
