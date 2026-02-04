@@ -18,9 +18,6 @@ public class IpInfoService {
 
     @Cacheable(value = "ipInfoCache", key = "#ip")
     public AnalysisDto.IpInfoResponse getIpInfo(String ip){
-
-        log.info("getIpInfo: ip={}", ip);
-
         return webClient.get()
                 .uri("/{ip}", ip)
                 .retrieve()
