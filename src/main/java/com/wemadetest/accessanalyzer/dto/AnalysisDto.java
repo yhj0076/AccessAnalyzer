@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AnalysisDto {
@@ -50,6 +51,20 @@ public class AnalysisDto {
         private String clientErrorRate;
         private String serverErrorRate;
         private List<DetailLogResponse> detailLogs;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @JsonPropertyOrder({
+            "analysisId",
+            "errorLineCount",
+            "errorLines"
+    })
+    public static class PostLog{
+        private long analysisId;
+        private int errorLineCount;
+        private List<String> errorLines = new ArrayList<>();
     }
 
     @Data

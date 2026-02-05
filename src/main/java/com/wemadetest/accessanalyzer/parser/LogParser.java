@@ -32,7 +32,7 @@ public class LogParser {
         this.ipInfoService = ipInfoService;
     }
 
-    public List<DetailLog> fileToDetailLog(MultipartFile file){
+    public List<DetailLog> fileToDetailLog(MultipartFile file, AnalysisDto.PostLog postLog){
         List<DetailLog> detailLogs = new ArrayList<>();
 
         try(BufferedReader reader = new BufferedReader(
@@ -52,6 +52,10 @@ public class LogParser {
 
                 detailLog = new DetailLog();
                 List<String> detailLogList = csvParser(log);
+                if(detailLogList.size() != 12){
+                    postLog.getErrorLines().add(log);
+                    continue;
+                }
 
                 detailLog.setTimeGeneratedUTC(stringToLocalDateTime(detailLogList.get(0)));
                 detailLog.setClientIp(detailLogList.get(1));
@@ -71,6 +75,7 @@ public class LogParser {
             throw new RuntimeException(e);
         }
 
+        postLog.setErrorLineCount(postLog.getErrorLines().size());
         return detailLogs;
     }
 

@@ -1,5 +1,6 @@
 package com.wemadetest.accessanalyzer.controller;
 
+import com.wemadetest.accessanalyzer.dto.AnalysisDto;
 import com.wemadetest.accessanalyzer.entity.AccessLog;
 import com.wemadetest.accessanalyzer.entity.DetailLog;
 import com.wemadetest.accessanalyzer.parser.LogParser;
@@ -31,10 +32,12 @@ public class AnalysisController {
             return ResponseEntity.badRequest().body("File is not csv");
         }
 
-        List<DetailLog> detailLogs = logParser.fileToDetailLog(file);
+        AnalysisDto.PostLog result = new AnalysisDto.PostLog();
+        List<DetailLog> detailLogs = logParser.fileToDetailLog(file,result);
         long analysisId = analysisService.analyzeLog(detailLogs);
+        result.setAnalysisId(analysisId);
 
-        return new ResponseEntity<>(analysisId, HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @GetMapping("/{analysisId}")
