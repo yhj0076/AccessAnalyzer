@@ -5,6 +5,11 @@ spring:
     type: caffeine
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=10m
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 
 ip-info:
   api: https://api.ipinfo.io/lite/
