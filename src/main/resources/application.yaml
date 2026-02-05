@@ -9,7 +9,12 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-
+  mvc:
+    async:
+      request-timeout: 3000
+server:
+  tomcat:
+    connection-timeout: 3s
 
 ip-info:
   api: https://api.ipinfo.io/lite/

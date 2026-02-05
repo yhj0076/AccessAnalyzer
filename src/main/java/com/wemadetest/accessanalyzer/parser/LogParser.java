@@ -19,14 +19,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
 public class LogParser {
     private final IpInfoService ipInfoService;
+    private final ExecutorService analysisExecutor;
 
-    public LogParser(IpInfoService ipInfoService) {
+    public LogParser(IpInfoService ipInfoService, ExecutorService analysisExecutor) {
         this.ipInfoService = ipInfoService;
+        this.analysisExecutor = analysisExecutor;
     }
 
     public List<DetailLog> fileToDetailLog(MultipartFile file, AnalysisDto.PostLog postLog){
@@ -113,6 +119,8 @@ public class LogParser {
     }
 
     public AnalysisDto.Response resultToResponse(AccessLog accessLog, int limit){
+        ExecutorService executor = analysisExecutor;
+
         AnalysisDto.Response response = new AnalysisDto.Response();
 
         double successRate = (double) accessLog.getSuccessCount() /accessLog.getDetailLogs().size()*100d;
@@ -121,34 +129,92 @@ public class LogParser {
         double serverErrorRate = (double) accessLog.getServerErrorCount() /accessLog.getDetailLogs().size()*100d;
 
         response.setRequestCount(accessLog.getDetailLogs().size());
+
         response.setSuccessRate(String.format("%.2f", successRate));
         response.setRedirectRate(String.format("%.2f", redirectRate));
         response.setClientErrorRate(String.format("%.2f", clientErrorRate));
         response.setServerErrorRate(String.format("%.2f", serverErrorRate));
 
-        List<AnalysisDto.DetailLogResponse> detailLogResponseList = new ArrayList<>();
-        for(int i = 0; i < limit; i++){
-            DetailLog detailLog = accessLog.getDetailLogs().get(i);
+//        List<AnalysisDto.DetailLogResponse> detailLogResponseList = new ArrayList<>();
+//        for(int i = 0; i < limit; i++){
+//            DetailLog detailLog = accessLog.getDetailLogs().get(i);
+//
+//            AnalysisDto.DetailLogResponse detailLogResponse = new AnalysisDto.DetailLogResponse();
+//            detailLogResponse.setPath(detailLog.getOriginalRequestUriWithArgs());
+//            detailLogResponse.setClientIp(detailLog.getClientIp());
+//            detailLogResponse.setHttpStatus(detailLog.getHttpStatus().value());
+//
+//            AnalysisDto.IpInfoResponse ipInfoResponse = ipInfoService.getIpInfo(detailLog.getClientIp());
+//
+//            detailLogResponse.setAsn(ipInfoResponse.getAsn());
+//            detailLogResponse.setAs_name(ipInfoResponse.getAs_name());
+//            detailLogResponse.setAs_domain(ipInfoResponse.getAs_domain());
+//            detailLogResponse.setCountry(ipInfoResponse.getCountry());
+//
+//            detailLogResponseList.add(detailLogResponse);
+//        }
 
-            AnalysisDto.DetailLogResponse detailLogResponse = new AnalysisDto.DetailLogResponse();
-            detailLogResponse.setPath(detailLog.getOriginalRequestUriWithArgs());
-            detailLogResponse.setClientIp(detailLog.getClientIp());
-            detailLogResponse.setHttpStatus(detailLog.getHttpStatus().value());
+        // ===== 병렬 IP 조회 =====
+        List<CompletableFuture<AnalysisDto.DetailLogResponse>> futures =
+                accessLog.getDetailLogs()
+                        .stream()
+                        .limit(limit)
+                        .map(log ->
+                                CompletableFuture.supplyAsync(() -> buildDetail(log), executor)
+                                        .completeOnTimeout(
+                                                buildFallback(log),
+                                                3,
+                                                TimeUnit.SECONDS
+                                        )
+                        )
+                        .toList();
 
-            AnalysisDto.IpInfoResponse ipInfoResponse = ipInfoService.getIpInfo(detailLog.getClientIp());
-
-            detailLogResponse.setAsn(ipInfoResponse.getAsn());
-            detailLogResponse.setAs_name(ipInfoResponse.getAs_name());
-            detailLogResponse.setAs_domain(ipInfoResponse.getAs_domain());
-            detailLogResponse.setCountry(ipInfoResponse.getCountry());
-
-            detailLogResponseList.add(detailLogResponse);
-        }
+        // ===== 3초 제한 =====
+        List<AnalysisDto.DetailLogResponse> detailLogResponseList =
+                futures.stream()
+                        .map(CompletableFuture::join)
+                        .toList();
 
         response.setDetailLogs(detailLogResponseList);
 
         return response;
     }
 
+    private AnalysisDto.DetailLogResponse buildDetail(DetailLog log) {
+
+        AnalysisDto.DetailLogResponse res =
+                new AnalysisDto.DetailLogResponse();
+
+        res.setPath(log.getOriginalRequestUriWithArgs());
+        res.setClientIp(log.getClientIp());
+        res.setHttpStatus(log.getHttpStatus().value());
+
+        AnalysisDto.IpInfoResponse ip =
+                ipInfoService.getIpInfo(log.getClientIp());
+
+        res.setAsn(ip.getAsn());
+        res.setAs_name(ip.getAs_name());
+        res.setAs_domain(ip.getAs_domain());
+        res.setCountry(ip.getCountry());
+
+        return res;
+    }
+
+    private AnalysisDto.DetailLogResponse buildFallback(DetailLog log) {
+
+        AnalysisDto.DetailLogResponse res =
+                new AnalysisDto.DetailLogResponse();
+
+        res.setPath(log.getOriginalRequestUriWithArgs());
+        res.setClientIp(log.getClientIp());
+        res.setHttpStatus(log.getHttpStatus().value());
+
+        res.setAsn("UNKNOWN");
+        res.setAs_name("UNKNOWN");
+        res.setAs_domain("UNKNOWN");
+        res.setCountry("UNKNOWN");
+
+        return res;
+    }
 
 }
