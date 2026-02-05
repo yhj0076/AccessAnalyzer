@@ -135,25 +135,6 @@ public class LogParser {
         response.setClientErrorRate(String.format("%.2f", clientErrorRate));
         response.setServerErrorRate(String.format("%.2f", serverErrorRate));
 
-//        List<AnalysisDto.DetailLogResponse> detailLogResponseList = new ArrayList<>();
-//        for(int i = 0; i < limit; i++){
-//            DetailLog detailLog = accessLog.getDetailLogs().get(i);
-//
-//            AnalysisDto.DetailLogResponse detailLogResponse = new AnalysisDto.DetailLogResponse();
-//            detailLogResponse.setPath(detailLog.getOriginalRequestUriWithArgs());
-//            detailLogResponse.setClientIp(detailLog.getClientIp());
-//            detailLogResponse.setHttpStatus(detailLog.getHttpStatus().value());
-//
-//            AnalysisDto.IpInfoResponse ipInfoResponse = ipInfoService.getIpInfo(detailLog.getClientIp());
-//
-//            detailLogResponse.setAsn(ipInfoResponse.getAsn());
-//            detailLogResponse.setAs_name(ipInfoResponse.getAs_name());
-//            detailLogResponse.setAs_domain(ipInfoResponse.getAs_domain());
-//            detailLogResponse.setCountry(ipInfoResponse.getCountry());
-//
-//            detailLogResponseList.add(detailLogResponse);
-//        }
-
         // ===== 병렬 IP 조회 =====
         List<CompletableFuture<AnalysisDto.DetailLogResponse>> futures =
                 accessLog.getDetailLogs()
