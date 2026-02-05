@@ -41,9 +41,10 @@ public class AnalysisController {
     }
 
     @GetMapping("/{analysisId}")
-    public ResponseEntity getResult(@PathVariable("analysisId") long analysisId){
+    public ResponseEntity getResult(@PathVariable("analysisId") long analysisId,
+                                    @RequestParam int limit){
         AccessLog accessLog = analysisService.getLog(analysisId);
 
-        return new ResponseEntity<>(logParser.resultToResponse(accessLog), HttpStatus.OK);
+        return new ResponseEntity<>(logParser.resultToResponse(accessLog,limit), HttpStatus.OK);
     }
 }

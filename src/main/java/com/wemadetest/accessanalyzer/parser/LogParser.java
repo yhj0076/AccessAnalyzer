@@ -23,12 +23,9 @@ import java.util.Locale;
 @Slf4j
 @Component
 public class LogParser {
-    private final int ANALYSIS_MAX_SIZE = 10;
-    private final WebClient webClient;
     private final IpInfoService ipInfoService;
 
-    public LogParser(WebClient webClient, IpInfoService ipInfoService) {
-        this.webClient = webClient;
+    public LogParser(IpInfoService ipInfoService) {
         this.ipInfoService = ipInfoService;
     }
 
@@ -115,7 +112,7 @@ public class LogParser {
         return result;
     }
 
-    public AnalysisDto.Response resultToResponse(AccessLog accessLog){
+    public AnalysisDto.Response resultToResponse(AccessLog accessLog, int limit){
         AnalysisDto.Response response = new AnalysisDto.Response();
 
         double successRate = (double) accessLog.getSuccessCount() /accessLog.getDetailLogs().size()*100d;
@@ -130,7 +127,7 @@ public class LogParser {
         response.setServerErrorRate(String.format("%.2f", serverErrorRate));
 
         List<AnalysisDto.DetailLogResponse> detailLogResponseList = new ArrayList<>();
-        for(int i = 0; i < ANALYSIS_MAX_SIZE; i++){
+        for(int i = 0; i < limit; i++){
             DetailLog detailLog = accessLog.getDetailLogs().get(i);
 
             AnalysisDto.DetailLogResponse detailLogResponse = new AnalysisDto.DetailLogResponse();
